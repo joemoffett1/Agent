@@ -1,0 +1,17 @@
+{
+  "_comment": "STANDARD (non-Max) tier. Merge these keys into ~/.claude/settings.json. effortLevel is medium to conserve usage; agents use Sonnet via each agent's `model:` field. If you find yourself rate-limited, run fewer worktrees at once (see README) before lowering effort further.",
+  "effortLevel": "medium",
+  "permissions": {
+    "defaultMode": "auto",
+    "allow": [
+      "Bash(npm:*)", "Bash(npx:*)", "Bash(node:*)", "Bash(tsc:*)",
+      "Bash(git add:*)", "Bash(git commit:*)", "Bash(git status:*)", "Bash(git diff:*)",
+      "Bash(git log:*)", "Bash(git show:*)", "Bash(git branch:*)", "Bash(git checkout:*)",
+      "Bash(git restore:*)", "Bash(git stash:*)", "Bash(git worktree:*)", "Bash(git rev-parse:*)",
+      "Bash(mkdir:*)", "Bash(cp:*)", "Bash(mv:*)", "Bash(cat:*)", "Bash(ls:*)", "Bash(echo:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)", "Bash(sudo:*)", "Bash(curl:*)", "Bash(wget:*)", "Bash(npm publish:*)"
+    ]
+  }
+}

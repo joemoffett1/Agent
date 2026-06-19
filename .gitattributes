@@ -1,0 +1,4 @@
+# Normalize line endings. Repo stores LF; force LF on checkout for scripts that need it.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
