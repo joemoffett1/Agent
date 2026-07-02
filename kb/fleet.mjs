@@ -56,6 +56,9 @@ export function readWorktrees(root) {
     let ahead = ''
     if (branch && branch !== 'main' && !branch.startsWith('(')) ahead = sh(`git rev-list --count main..${branch}`, root)
 
+    // uncommitted work in the worktree (staged + unstaged + untracked), as a file count
+    const dirty = sh('git status --porcelain', path).split('\n').filter(Boolean).length
+
     // status: prefer the HANDOFF.md fleet header; otherwise infer (and mark it).
     // The handoff lives INSIDE the feature folder (rides the branch); root copy is a fallback.
     let status = '', inferred = false
@@ -84,7 +87,7 @@ export function readWorktrees(root) {
       else if (ahead && +ahead > 0) status = 'in progress'
       else status = 'idle'
     }
-    wts.push({ path, dir, branch, role, agent: roster.agent || '', feature, ahead, status, inferred })
+    wts.push({ path, dir, branch, role, agent: roster.agent || '', feature, ahead, dirty, status, inferred })
   }
   const rank = { orchestrator: 0, builder: 1, reviewer: 2 }
   wts.sort((a, b) => (rank[a.role] ?? 9) - (rank[b.role] ?? 9) || a.dir.localeCompare(b.dir))
@@ -133,6 +136,7 @@ const STATUS_CSS = `
 .page-status .wt-status{display:inline-block;font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;color:#0d1117;background:var(--c)}
 .page-status .wt-status .inf{font-weight:500;opacity:.8;font-style:italic;margin-left:5px}
 .page-status .ahead{display:inline-block;background:var(--bg3);border:1px solid var(--bd);border-radius:999px;padding:0 7px;color:var(--tx)}
+.page-status .dirty{display:inline-block;color:#d29922;font-weight:600;white-space:nowrap}
 .page-kickoff .kg{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:16px;margin:0 0 22px}
 .page-kickoff .kg-controls{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:14px}
 .page-kickoff .kg-controls label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--mut)}
@@ -157,11 +161,12 @@ export function buildFleetStatus(root, buildTime) {
         const c = statusColor(w.status)
         const rc = ROLE_COLOR[w.role] || '#8b949e'
         const ahead = w.ahead ? ` · <span class="ahead">+${esc(w.ahead)}</span>` : ''
+        const dirty = w.dirty ? ` · <span class="dirty" title="${esc(String(w.dirty))} file(s) with uncommitted changes">● ${esc(String(w.dirty))} uncommitted</span>` : ''
         const inf = w.inferred ? ' <span class="inf">inferred</span>' : ''
         return `<article class="wt" style="--c:${c}">
 <div class="wt-top"><span class="wt-agent">${esc(w.agent)}</span><span class="role-badge" style="background:${rc}">${esc(w.role)}</span></div>
 <div class="wt-feat">${esc(w.feature)}</div>
-<div class="wt-meta"><code>${esc(w.dir)}</code> · <code>${esc(w.branch)}</code>${ahead}</div>
+<div class="wt-meta"><code>${esc(w.dir)}</code> · <code>${esc(w.branch)}</code>${ahead}${dirty}</div>
 <div class="wt-status" style="background:${c}">${esc(w.status)}${inf}</div>
 </article>`
       }).join('\n')
