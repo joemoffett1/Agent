@@ -70,6 +70,9 @@ install.cmd                    Windows double-click launcher for install.ps1
 settings.snippet.json         optional permission allowlist to merge into ~/.claude/settings.json
 KICKOFF.md                    paste-able launch cards (one per role)
 AGENTS_FRAMEWORK.md           full framework reference
+WORKFLOW.html                 the visual guide — open in any browser: the whole workflow,
+                              roles, skills, document flow, file structure, and git rules
+                              on one self-contained page (give this to new users first)
 CLAUDE-autorole.md            branch→role block the installer writes into ~/.claude/CLAUDE.md
 ADAPT-FOR-NEW-PROJECT.md      how to customize for your project
 agents/                       the 5 roles: orchestrator, planner, builder, reviewer, integrator
