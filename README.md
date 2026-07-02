@@ -28,17 +28,28 @@ them.) And **you never need a terminal**: agents run any commands themselves; yo
 - **Microsoft Edge or Google Chrome** — driven headlessly by `verify-shots.mjs` to capture the
   reviewer's screenshot evidence packs. Only needed for projects with a UI to screenshot.
 
-## Install — no terminal needed
+## Install
 
-Open this folder in the Claude Code app and paste:
+Run the installer for your OS from this folder:
+
+- **Windows:** double-click **`install.cmd`** (or `powershell -ExecutionPolicy Bypass -File install.ps1`)
+- **macOS / Linux / Git-Bash:** `./install.sh`
+
+It copies `agents/` → `~/.claude/agents/`, `commands/` → `~/.claude/commands/`, and
+`AGENTS_FRAMEWORK.md` + `KICKOFF.md` → `~/.claude/`, then installs the branch→role block into
+`~/.claude/CLAUDE.md`. **Safe to re-run:** it never clobbers your other settings, and a re-run
+**replaces an older framework block in place** (between managed markers) so you always end up on
+the current model — the reviewer runs inside each feature's own worktree; there is no dedicated
+reviewer branch or worktree. Optionally merge `settings.snippet.json` into `~/.claude/settings.json`
+to pre-approve the git-worktree / npm / node commands the fleet runs constantly (permissions only —
+no model or thinking pins).
+
+**No terminal?** Open this folder in the Claude Code app and paste:
 
 > Install this agent framework: copy `agents/` into `~/.claude/agents/`, `commands/` into
-> `~/.claude/commands/`, and `KICKOFF.md` + `AGENTS_FRAMEWORK.md` into `~/.claude/`. Then append
-> the contents of `CLAUDE-autorole.md` to `~/.claude/CLAUDE.md` unless it already contains the
-> heading "Agent framework — automatic worktree roles". Overwrite older copies; tell me what you
-> copied.
-
-Safe to re-run — it just refreshes the files.
+> `~/.claude/commands/`, and `KICKOFF.md` + `AGENTS_FRAMEWORK.md` into `~/.claude/`. Then install
+> the contents of `CLAUDE-autorole.md` into `~/.claude/CLAUDE.md`, replacing any existing
+> "Agent framework — automatic worktree roles" block. Overwrite older copies; tell me what you copied.
 
 ## After installing
 
@@ -47,16 +58,19 @@ Safe to re-run — it just refreshes the files.
   HTML knowledge base from `kb/`** (baseline in every framework repo), sets up git (asking once
   about an online repo), and starts the first features.
 - **Existing project:** open a worktree folder as a session — it auto-adopts its role from the
-  branch (`main` → orchestrator, review branch → reviewer, `feat/*` → builder). Or paste a card
-  from `~/.claude/KICKOFF.md`.
+  branch (`main` → orchestrator, `feat/*` → builder). To review a feature, open its `feat/*`
+  worktree and run `/role reviewer`. Or paste a card from `~/.claude/KICKOFF.md`.
 - **Customizing names / scope / stack:** read `ADAPT-FOR-NEW-PROJECT.md`.
 
 ## What's in this folder
 
 ```
+install.sh / install.ps1      the installer (Bash / PowerShell); install.cmd = double-click wrapper
+install.cmd                    Windows double-click launcher for install.ps1
+settings.snippet.json         optional permission allowlist to merge into ~/.claude/settings.json
 KICKOFF.md                    paste-able launch cards (one per role)
 AGENTS_FRAMEWORK.md           full framework reference
-CLAUDE-autorole.md            branch→role block the install card appends to ~/.claude/CLAUDE.md
+CLAUDE-autorole.md            branch→role block the installer writes into ~/.claude/CLAUDE.md
 ADAPT-FOR-NEW-PROJECT.md      how to customize for your project
 agents/                       the 5 roles: orchestrator, planner, builder, reviewer, integrator
 commands/                     /grill /handoff /fleet /bootstrap /role /architecture-review
@@ -71,10 +85,10 @@ kb/                           the per-project knowledge-base starter (baseline �
 - **Roles** live in `~/.claude/agents/` — each file is both a spawnable subagent and a job
   description for a long-lived session. The **orchestrator** (on `main`) recommends but never
   starts work on its own; **builders** each own one `src/features/<name>/` folder and touch
-  nothing outside it (shared edits are deferred to `INTEGRATION.md`); the **reviewer** is one
-  station with three phases (review the diff → verify by running → capture the `VERIFY/`
-  evidence pack); the **integrator** is the only role allowed to edit shared files, one feature
-  at a time.
+  nothing outside it (shared edits are deferred to `INTEGRATION.md`); the **reviewer** is
+  dispatched into the feature's own worktree for three phases (review the diff → verify by
+  running → capture the `VERIFY/` evidence pack, committed on the feature branch); the
+  **integrator** is the only role allowed to edit shared files, one feature at a time.
 - **Handoffs** self-propel: every role ends by writing the next role's instructions into the
   feature's `HANDOFF.md` — and **ends its reply with a copy/paste kickoff card** for the next
   agent (or, if it needs your decision, asks and waits instead). You dispatch every agent

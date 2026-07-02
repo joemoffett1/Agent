@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Workflow — how the framework works</title>
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2230;--bd:#30363d;--tx:#e6edf3;--mut:#9aa4b2;
+  --acc:#7c6cf6;--link:#b3a8ff;
+  --now:#3fb950;--next:#58a6ff;--warn:#e3873a;--danger:#f85149;
+}
+:root[data-theme=light]{
+  --bg:#ffffff;--bg2:#f6f8fa;--bg3:#eef1f5;--bd:#d0d7de;--tx:#1f2328;--mut:#59636e;
+  --acc:#6b4bf6;--link:#4b35c9;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.65 system-ui,Segoe UI,sans-serif;display:flex;min-height:100vh}
+a{color:var(--link);text-decoration:none}a:hover{text-decoration:underline}
+h1{font-size:26px;line-height:1.2;margin:0 0 12px}
+h2{font-size:20px;line-height:1.25;margin-top:34px;padding-top:10px;border-top:1px solid var(--bd)}
+h3{font-size:16px;margin:18px 0 6px}
+code{background:var(--bg2);border:1px solid var(--bd);padding:.5px 5px;border-radius:4px;font-family:Consolas,monospace;font-size:.88em}
+pre.code{background:var(--bg2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;overflow:auto;font-size:13px;line-height:1.5}
+pre.code code{background:none;border:none;padding:0}
+blockquote{margin:10px 0;padding:8px 14px;border-left:3px solid var(--acc);background:var(--bg2);border-radius:0 6px 6px 0;color:var(--mut)}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+th,td{border:1px solid var(--bd);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--bg2)}
+ul,ol{padding-left:22px;margin:8px 0}li{margin:3px 0}
+#nav{position:sticky;top:0;align-self:flex-start;height:100vh;overflow:auto;width:248px;flex:none;background:var(--bg2);border-right:1px solid var(--bd);padding:16px 12px;display:flex;flex-direction:column;gap:2px}
+#nav .brand{margin-bottom:12px;line-height:1.25}
+#nav .brand b{font-weight:700;font-size:16px;color:var(--tx)}
+#nav .brand span{display:block;color:var(--mut);font-size:12px}
+#nav>a{padding:7px 10px;border-radius:7px;color:var(--tx)}
+#nav>a:hover{background:var(--bg3);text-decoration:none}
+.nav-foot{margin-top:auto;padding-top:12px}
+#theme-toggle{width:100%;background:var(--bg3);border:1px solid var(--bd);color:var(--tx);border-radius:7px;padding:7px;cursor:pointer}
+#theme-toggle:hover{filter:brightness(1.15)}
+#main{flex:1;min-width:0;padding:26px 36px;max-width:1060px}
+.starthere{background:var(--bg2);border:1px solid var(--bd);border-left:4px solid var(--acc);border-radius:10px;padding:14px 16px;margin:16px 0}
+.sh-tag{display:inline-block;background:var(--acc);color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:5px;margin-bottom:8px}
+.sh-what{font-size:16px;margin:4px 0}
+.sh-who{color:var(--mut);font-size:14px;margin:4px 0}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px;border:1px solid;vertical-align:middle;white-space:nowrap}
+.b-gate{color:#fff;background:var(--warn);border-color:var(--warn)}
+.b-auto{color:#fff;background:var(--now);border-color:var(--now)}
+.b-role{color:#fff;background:var(--acc);border-color:var(--acc)}
+.b-danger{color:#fff;background:var(--danger);border-color:var(--danger)}
+.flow{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:14px 18px;margin:14px 0;overflow:auto}
+.flow pre{margin:0;font-family:Consolas,monospace;font-size:13px;line-height:1.55}
+.gate{color:var(--warn);font-weight:700}
+.rolename{color:var(--acc);font-weight:700}
+.callout{border:1px solid var(--bd);border-left:4px solid var(--next);background:var(--bg2);border-radius:8px;padding:10px 14px;margin:12px 0;font-size:14px}
+.callout.warn{border-left-color:var(--warn)}
+.callout.danger{border-left-color:var(--danger)}
+kbd.cmd{background:var(--bg3);border:1px solid var(--bd);border-bottom-width:2px;border-radius:5px;padding:1px 7px;font-family:Consolas,monospace;font-size:.85em;white-space:nowrap}
+@media (max-width:860px){#nav{display:none}#main{padding:18px}}
+</style>
+</head>
+<body>
+<nav id="nav">
+  <div class="brand"><b>Agent Workflow</b><span>portable framework guide</span></div>
+  <a href="#big-picture">The big picture</a>
+  <a href="#roles">The roles</a>
+  <a href="#skills">Skills &amp; commands</a>
+  <a href="#skills-per-role">Skills per agent</a>
+  <a href="#lifecycle">A feature's lifecycle</a>
+  <a href="#docs-flow">Document flow</a>
+  <a href="#handoff">The handoff contract</a>
+  <a href="#files">File structure</a>
+  <a href="#git">Git &amp; GitHub rules</a>
+  <a href="#house-rules">General house rules</a>
+  <a href="#launching">Launching agents</a>
+  <a href="#install">Installing / porting</a>
+  <div class="nav-foot"><button id="theme-toggle">Toggle light / dark</button></div>
+</nav>
+<main id="main">
+
+<h1>The Agent Workflow</h1>
+
+<div class="starthere">
+  <span class="sh-tag">Start here</span>
+  <p class="sh-what">A planner → builder → reviewer → integrator agent pipeline for Claude Code, built on git worktrees: several builder agents work in parallel with <b>zero merge collisions</b>, and you — the human — approve exactly <b>two things</b> per feature: the plan, and the merge.</p>
+  <p class="sh-who"><b>Who this is for:</b> anyone adopting the framework in their own project, and any agent that needs to understand its place in the pipeline.</p>
+  <ul>
+    <li><b>Two human gates only</b> — plan approval and merge approval. Everything between them (building, review, verification, status upkeep) is automated.</li>
+    <li><b>Isolation is the trick</b> — every feature is built entirely inside its own folder; shared-file edits are <em>deferred, not made</em>, so parallel branches can never conflict.</li>
+    <li><b>The chain is self-propelling</b> — each agent writes the next agent's instructions into <code>HANDOFF.md</code>, so launching the next one is a one-line paste.</li>
+    <li><b>You never need a terminal</b> — agents run all commands themselves; you only chat and approve.</li>
+  </ul>
+</div>
+
+<h2 id="big-picture">The big picture</h2>
+
+<p>The framework turns one repo into a small fleet. The main checkout runs the <span class="rolename">orchestrator</span> (your project console); each in-flight feature gets its own <b>git worktree</b> on a <code>feat/&lt;name&gt;</code> branch, where a <span class="rolename">builder</span> works. A <span class="rolename">reviewer</span> is dispatched <em>into</em> a feature's worktree when it's done, and a single serialized <span class="rolename">integrator</span> merges verified features to <code>main</code>.</p>
+
+<div class="flow"><pre>
+        YOU set direction
+              │
+   <span class="rolename">Orchestrator</span>  ── observes / recommends; starts work only when you say so
+              │  briefs
+              ▼
+        <span class="rolename">Planner</span>  ── grills you, writes the Feature PRD + issue slices
+              │                              <span class="gate">▶ GATE 1: you approve the plan</span>
+              │  → Next: builder
+              ▼
+      <span class="rolename">Builder(s)</span>  ── build inside src/features/&lt;name&gt;/ (parallel, one per worktree)
+              │  → Next: reviewer
+              ▼
+       <span class="rolename">Reviewer</span>  ── dispatched INTO the feature's worktree, 3 phases:
+              │      1 reviews the diff · 2 verifies it runs · 3 captures the
+              │      screenshot evidence pack (VERIFY/) — committed on the branch
+              │  → Next: integrator   (or → Next: builder if changes requested)
+              ▼
+     <span class="rolename">Integrator</span>  ── merges to main, applies INTEGRATION.md, wires it in
+              │                              <span class="gate">▶ GATE 2: you approve the merge</span>
+              │  → Next: orchestrator
+              ▼
+        merged ── worktree freed for the next feature
+</pre></div>
+
+<p>Every arrow in that diagram is a <code>→ Next:</code> block the finishing agent writes into the feature's <code>HANDOFF.md</code> — see <a href="#handoff">the handoff contract</a>. You approve the merge from the knowledge base's <b>Verification page</b> (screenshot evidence per acceptance criterion), not by hand-testing.</p>
+
+<div class="callout"><b>No model or thinking pins.</b> The framework configures nothing the Claude Code app already handles: role files carry no <code>model:</code> frontmatter and kickoff cards carry no thinking directives. You pick model and thinking depth per session in the app — heavier for planning and orchestration, lighter for mechanical runs — so credit spend stays in your hands.</div>
+
+<h2 id="roles">The roles</h2>
+
+<p>Each role is defined once, in <code>~/.claude/agents/&lt;role&gt;.md</code>. That single file is both the <b>spawnable subagent</b> (the Agent tool can dispatch it) and the <b>role's job description</b> (the <kbd class="cmd">/role</kbd> command loads it into a long-lived session).</p>
+
+<table>
+<tr><th>Role</th><th>How many</th><th>Lives in</th><th>May edit</th><th>Job</th></tr>
+<tr>
+  <td><span class="badge b-role">orchestrator</span></td>
+  <td>Exactly one</td>
+  <td>main worktree (<code>main</code> branch)</td>
+  <td>Program PRD, <code>FLEET.md</code> — never feature code</td>
+  <td>Project lead / console. Holds whole-project scope, briefs planners, maintains the dashboard, sequences and recommends work. <b>Starts nothing on its own</b> — it observes, reports, and acts only when told.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">planner</span></td>
+  <td>On demand, per feature</td>
+  <td>dispatched (or the feature worktree)</td>
+  <td>Docs only — never <code>src/</code></td>
+  <td>Grills you one question at a time, then writes the Feature PRD (<code>docs/features/&lt;NAME&gt;.md</code>) and cuts it into vertical-slice issues with detailed plans. Stops at the plan gate.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">builder</span></td>
+  <td>Many — one per worktree (your parallelism)</td>
+  <td>its feature worktree (<code>feat/&lt;name&gt;</code>)</td>
+  <td>Only its own <code>src/features/&lt;name&gt;/</code> folder (+ its own feature PRD)</td>
+  <td>Implements the PRD's issues in blocked-by order, <b>test-first at the PRD's pre-agreed seams</b> (red → green). Commits every checkpoint; stamps status; never touches shared files.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">reviewer</span></td>
+  <td>On demand, dispatched per feature</td>
+  <td>the feature's own worktree</td>
+  <td>Only <code>REVIEW.md</code>, <code>VERIFY/</code>, PRD evidence links, <code>HANDOFF.md</code>, <code>.status.json</code> — never app code</td>
+  <td>Three phases in one dispatch: <b>review</b> the diff (reads), <b>verify</b> it works (build, tests, dev harness), and capture the <b>screenshot evidence pack</b> the owner approves from. Committed on the feature branch so it merges with the feature.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">integrator</span></td>
+  <td>Exactly one, strictly serialized</td>
+  <td>main worktree (<code>main</code> branch)</td>
+  <td><span class="badge b-danger">Danger Zone</span> — the ONLY role allowed to edit shared files</td>
+  <td>Merges a verified feature to <code>main</code>, applies the deferred <code>INTEGRATION.md</code> edits (routes, nav, types, DB), wires the real adapters, folds the changelog, verifies the whole app, refreshes the evidence pack against the integrated app.</td>
+</tr>
+</table>
+
+<p><b>Review vs. verify are phases, not roles.</b> The review phase answers <em>"is this code right?"</em> by reading; the verify phase answers <em>"does it actually work?"</em> by running. Code routinely passes one and fails the other, so the reviewer always does both, in order, then turns the result into screenshots.</p>
+
+<h3>Automatic role adoption</h3>
+<p>Roles are assigned by <b>branch</b>, via a rule in <code>~/.claude/CLAUDE.md</code>: opening a Claude Code session in a worktree checked out on <code>main</code> auto-adopts the <b>orchestrator</b>; on <code>feat/*</code> it auto-adopts the <b>builder</b> for that folder. There is no dedicated review worktree — to review a feature, open its own worktree and run <kbd class="cmd">/role reviewer</kbd>. Override any auto-role with <kbd class="cmd">/role &lt;name&gt;</kbd>.</p>
+
+<h2 id="skills">Skills &amp; commands</h2>
+
+<p>Six skills (slash commands, installed at <code>~/.claude/commands/</code>) drive the framework. Most of the time you don't need them — the auto-role rule plus a pasted kickoff card does the same work — but they're the explicit interface.</p>
+
+<table>
+<tr><th>Command</th><th>What it does</th><th>Typically run by</th></tr>
+<tr>
+  <td><kbd class="cmd">/fleet</kbd></td>
+  <td>Adopts the <b>orchestrator</b> and runs a fleet cycle: regenerates the <code>FLEET.md</code> dashboard from every worktree's status, checks alignment to the Program PRD, and reports project state — what's in flight, what awaits your gate, what to start next. <b>Recommends only; starts nothing.</b></td>
+  <td>You, in the main worktree — your "what's going on?" button.</td>
+</tr>
+<tr>
+  <td><kbd class="cmd">/grill&nbsp;[topic]</kbd></td>
+  <td>A relentless one-question-at-a-time interview (each question comes with a recommended answer) until a plan's decision tree has no unresolved branches. The orchestrator and planner apply this behavior automatically before writing any PRD.</td>
+  <td>You, anytime you want a design pressure-tested; built into orchestrator + planner.</td>
+</tr>
+<tr>
+  <td><kbd class="cmd">/bootstrap&nbsp;&lt;idea&gt;</kbd></td>
+  <td>Stands the whole framework up in a <b>brand-new repo</b>: grills you about the idea, writes the Program PRD with a thin milestone 1, creates the feature-isolation convention + <code>FLEET.md</code> roster, stands up the HTML knowledge base, sets up git (asking once about an online repo), creates the first <code>feat/*</code> worktrees, and hands them to the planner. Deliberately starts with 1–2 features.</td>
+  <td>You, once, in a fresh project folder.</td>
+</tr>
+<tr>
+  <td><kbd class="cmd">/role&nbsp;&lt;name&gt;</kbd></td>
+  <td>Adopts a role (<code>orchestrator</code> / <code>planner</code> / <code>builder</code> / <code>reviewer</code> / <code>integrator</code>) for the whole session, overriding the branch-based auto-role. This is how a feature gets reviewed: open its worktree, run <kbd class="cmd">/role reviewer</kbd>.</td>
+  <td>You, when the auto-role isn't the role you need.</td>
+</tr>
+<tr>
+  <td><kbd class="cmd">/handoff&nbsp;[recipient|same]</kbd></td>
+  <td>The end-of-turn ritual for <b>every role</b>: brings the durable records current (PRD progress, CHANGELOG, INTEGRATION.md, <code>.status.json</code>), rewrites the feature's <code>HANDOFF.md</code> (who left it → who picks up, next goals, known problems, doc <em>pointers</em> — never copied content), and prints the next agent's copy/paste kickoff card. Also works <b>mid-task</b> to compact a long context window — hand off to a fresh session of the same role, losing nothing the documents don't hold.</td>
+  <td>Every agent, at the end of every completed turn.</td>
+</tr>
+<tr>
+  <td><kbd class="cmd">/architecture-review</kbd></td>
+  <td>On demand only: scans the whole repo for architecture-deepening opportunities and writes a suggested-improvements page into the knowledge base. Recommendations only — never changes code, never runs automatically.</td>
+  <td>You or the orchestrator, occasionally.</td>
+</tr>
+</table>
+
+<h2 id="skills-per-role">How each agent uses the skills</h2>
+
+<table>
+<tr><th>Agent</th><th>Skills it runs</th><th>How it uses them</th></tr>
+<tr>
+  <td><span class="badge b-role">orchestrator</span></td>
+  <td><kbd class="cmd">/fleet</kbd> · <kbd class="cmd">/grill</kbd> · <kbd class="cmd">/bootstrap</kbd> · <kbd class="cmd">/architecture-review</kbd> · <kbd class="cmd">/handoff</kbd></td>
+  <td><kbd class="cmd">/fleet</kbd> <em>is</em> the orchestrator's main loop — dashboard refresh + state-of-the-project report. It applies <kbd class="cmd">/grill</kbd> behavior before any Program-PRD writing, runs <kbd class="cmd">/bootstrap</kbd> for greenfield projects, and runs <kbd class="cmd">/architecture-review</kbd> only when you ask.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">planner</span></td>
+  <td><kbd class="cmd">/grill</kbd> (built in) · <kbd class="cmd">/handoff</kbd></td>
+  <td>Grilling is step 1 of planning — the PRD isn't written until every design branch is resolved. When the slice list is approved, <kbd class="cmd">/handoff</kbd> writes the <code>→ Next: builder</code> block and prints the builder's kickoff card.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">builder</span></td>
+  <td><kbd class="cmd">/handoff</kbd></td>
+  <td>Builders mostly use files, not commands: the PRD is the plan, <code>.status.json</code> is the heartbeat. At the end of each completed turn (or to compact a long session), <kbd class="cmd">/handoff</kbd> updates the records and prints the reviewer's (or next builder session's) card.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">reviewer</span></td>
+  <td><kbd class="cmd">/role reviewer</kbd> (to adopt) · <kbd class="cmd">/handoff</kbd></td>
+  <td>Adopted inside the feature's own worktree. Its evidence phase uses the zero-dep capture script (<code>scripts/verify-shots.mjs</code>) rather than a skill, then rebuilds the KB so the Verification page is current. <kbd class="cmd">/handoff</kbd> routes pass → integrator, fail → builder.</td>
+</tr>
+<tr>
+  <td><span class="badge b-role">integrator</span></td>
+  <td><kbd class="cmd">/fleet</kbd> (after merge) · <kbd class="cmd">/handoff</kbd></td>
+  <td>After a successful merge it sets the feature's status to <code>merged</code>, runs <kbd class="cmd">/fleet</kbd> to refresh the dashboard, and hands back to the orchestrator with a suggestion for what the freed worktree should pick up next.</td>
+</tr>
+</table>
+
+<div class="callout"><b>The human dispatches every agent.</b> No agent starts another agent. When an agent's work is done, it ends with a kickoff card; <em>you</em> paste that card into the next session (or tell the orchestrator to dispatch it). If an agent needs a decision instead, it asks and waits — no card until the blocker is resolved.</div>
+
+<h2 id="lifecycle">A feature's lifecycle, step by step</h2>
+
+<ol>
+  <li><b>Greenlight.</b> You add the feature to the Program PRD's features list (or ask the orchestrator to; it grills you first). Nothing is built that isn't on this list.</li>
+  <li><b>Plan.</b> The planner grills you, writes the Feature PRD — problem · solution · user stories · implementation decisions · <b>testing seams</b> · out-of-scope — and cuts it into vertical-slice issues, each with a detailed plan, acceptance criteria, tests-first notes, blocked-by ordering, and an <code>Evidence: pending review</code> line. <span class="badge b-gate">GATE 1</span> You approve the numbered slice list.</li>
+  <li><b>Build.</b> A worktree is created (<code>git worktree add ../&lt;dir&gt; -b feat/&lt;name&gt;</code>) and the builder works the issues in order, test-first at the PRD's seams, committing each checkpoint and stamping <code>.status.json</code>. It never waits between checkpoints — it self-continues until done or genuinely blocked.</li>
+  <li><b>Review + verify + evidence.</b> Status hits <code>completed — pending review</code>; the reviewer is dispatched into that worktree. Phase 1 reads the diff (scope discipline, three-layer purity, plan fidelity, correctness). Phase 2 runs it (typecheck, in-folder tests, dev harness). Phase 3 captures one screenshot per acceptance criterion into <code>VERIFY/</code> and rebuilds the KB. Verdicts go into <code>REVIEW.md</code>; pass → <code>verified — pending integration</code>, fail → <code>changes requested</code> back to the builder.</li>
+  <li><b>Approve from evidence.</b> <span class="badge b-gate">GATE 2</span> You skim the feature's evidence pack on the KB's Verification page and approve the merge — no hand-testing.</li>
+  <li><b>Integrate.</b> The integrator (one at a time) merges the branch, applies every deferred <code>INTEGRATION.md</code> edit, wires real adapters + routes/nav, folds the feature changelog into the app changelog, marks the PRD entry done, builds and tests the <em>whole</em> app, and re-captures the evidence pack against the integrated app ("passed alone, broke wired in" is the classic failure).</li>
+  <li><b>Recycle.</b> Status <code>merged</code>; <kbd class="cmd">/fleet</kbd> refreshes the dashboard; the worktree is free for the next feature.</li>
+</ol>
+
+<p><b>Status vocabulary</b> (used in <code>.status.json</code> and the <code>&lt;!--fleet--&gt;</code> header): <code>planning</code> · <code>in progress</code> · <code>completed — pending review</code> · <code>in review</code> · <code>changes requested</code> · <code>verified — pending integration</code> · <code>integrating</code> · <code>merged</code> · <code>blocked</code> · <code>idle</code>.</p>
+
+<h2 id="docs-flow">Document flow — where information lives</h2>
+
+<p>Subagents are stateless, so shared state lives in <b>files</b>, never in agent memory. Three tiers:</p>
+
+<table>
+<tr><th>Tier</th><th>Document</th><th>Written by</th><th>Read by</th><th>Holds</th></tr>
+<tr><td rowspan="2">Project</td>
+  <td><code>docs/PRD.md</code> — the <b>Program PRD</b></td><td>orchestrator</td><td>everyone</td>
+  <td>The problem, solution, principles, current milestone, and the <b>features list</b> (each entry linking its Feature PRD, with status). The brief every planner plans toward.</td></tr>
+<tr><td><code>FLEET.md</code> (repo root)</td><td><em>generated</em> by <kbd class="cmd">/fleet</kbd></td><td>you + orchestrator</td>
+  <td>The live dashboard: worktree | feature | agent name | branch (+ahead) | status. A snapshot — regenerate it, never hand-edit the table. Also carries the agent-name roster.</td></tr>
+<tr><td rowspan="2">Feature (in <code>docs/</code>)</td>
+  <td><code>docs/features/&lt;NAME&gt;.md</code> — the <b>Feature PRD</b></td><td>planner (builders refine)</td><td>builder, reviewer, integrator</td>
+  <td>Definition + the vertical-slice issues + a <code>## Progress log</code> builders append to as reality diverges. The working memory for an in-flight feature.</td></tr>
+<tr><td><code>docs/features/README.md</code></td><td>set up once</td><td>everyone</td>
+  <td>The governing convention: feature-folder isolation, the Danger Zone list, the three-layer split, the folder layout, the merge pass.</td></tr>
+<tr><td rowspan="5">Feature (rides the branch, in <code>src/features/&lt;name&gt;/</code>)</td>
+  <td><code>HANDOFF.md</code></td><td>every finishing agent</td><td>the next agent</td>
+  <td>The baton — see <a href="#handoff">the handoff contract</a>. Human-readable status header + the <code>→ Next:</code> instructions.</td></tr>
+<tr><td><code>.status.json</code></td><td>the working agent, every transition</td><td><kbd class="cmd">/fleet</kbd></td>
+  <td>The machine-readable heartbeat: <code>{ feature, branch, checkpoint, state, lastUpdated, note, needsApproval, questions }</code>. If it and HANDOFF.md disagree, <b>.status.json + git win</b>.</td></tr>
+<tr><td><code>CHANGELOG.md</code></td><td>builder</td><td>integrator</td>
+  <td>The feature's own audit log, one entry per checkpoint. The integrator folds it into the app changelog at merge — builders never touch the repo-root changelog.</td></tr>
+<tr><td><code>INTEGRATION.md</code></td><td>builder</td><td>integrator</td>
+  <td>The deferred-merge spec: every shared edit the feature needs (tables, types, routes, nav, icons), written precisely enough to <b>apply blind</b>. The only place shared edits are described.</td></tr>
+<tr><td><code>REVIEW.md</code> + <code>VERIFY/</code></td><td>reviewer only</td><td>you (via the KB) + integrator</td>
+  <td>Findings (blocking / should-fix / nit) + two verdicts, and the screenshot evidence pack (<code>VERIFICATION.md</code> + one PNG per acceptance criterion). Committed on the feature branch so they merge with it.</td></tr>
+</table>
+
+<h3>The knowledge base (KB) — the human view</h3>
+<p>Authored markdown under <code>docs/</code> is built into a cross-linked HTML site under <code>docs-site/</code> by a <b>zero-dependency</b> Node script (<code>npm run build:docs</code>). Three pages are generated live from the fleet's files: <b>Status</b> (the dashboard), <b>Kickoff</b> (launch cards with a generator), and <b>Verification</b> (every feature's <code>VERIFY/</code> evidence pack, aggregated from every worktree — merged or not). House rule: after editing any authored doc, rebuild — <b>never leave the HTML stale</b>, and never hand-edit generated output.</p>
+
+<h2 id="handoff">The handoff contract — the self-propelling chain</h2>
+
+<p>Every role <b>orients on start</b> and <b>hands off on finish</b>, so launching the next agent takes one line and it learns the rest from the files.</p>
+<ul>
+  <li><b>Orient:</b> your instructions are the <code>→ Next: &lt;your role&gt;</code> block in the feature's <code>HANDOFF.md</code>, read together with the Feature PRD and the Program PRD. Confirm the feature, then proceed.</li>
+  <li><b>Hand off:</b> bring the durable records current <em>first</em> (the handoff is never the only home of information), then rewrite <code>HANDOFF.md</code> and end your reply with the next agent's kickoff card.</li>
+</ul>
+
+<pre class="code"><code>&lt;!--fleet
+agent: Builder3
+worktree: mc-storage
+feature: Virtual Storage Animation (storage3d)
+branch: feat/storage3d
+status: completed — pending review
+next: reviewer
+updated: 2026-06-17
+--&gt;
+
+# Handoff — Virtual Storage Animation
+_Builder3 → Reviewer_
+
+## Where it stands
+- &lt;what's done, what isn't, anything surprising&gt;
+
+## Known problems / gotchas
+- &lt;anything that will bite: flaky test, port in use, partial work&gt;
+
+## Pointers (paths/links only — no copied content)
+- &lt;feature PRD + issue numbers · REVIEW.md / VERIFY/ / INTEGRATION.md · harness URL&gt;
+
+## → Next: reviewer
+- Review `git diff main..feat/storage3d`: folder-only scope, three-layer purity, plan fidelity, correctness.
+- Then verify: run the feature's __tests__; load the harness; check the acceptance criteria.
+- Write findings to REVIEW.md; set status `verified — pending integration` or `changes requested`.
+
+## Open questions for the human
+- &lt;only if you need a decision&gt;</code></pre>
+
+<p>It lives <b>inside the feature folder</b> (<code>src/features/&lt;name&gt;/HANDOFF.md</code>, beside <code>.status.json</code>) so it rides the branch, stays within the builder's allowed scope, and can never collide at merge.</p>
+
+<h2 id="files">File structure</h2>
+
+<h3>The machine (user level, portable)</h3>
+<pre class="code"><code>~/.claude/
+  CLAUDE.md              # carries the auto-role rule (branch → role)
+  AGENTS_FRAMEWORK.md    # the framework's single source of truth
+  KICKOFF.md             # the paste-able launch cards
+  agents/                # one file per role = subagent + job description
+    orchestrator.md · planner.md · builder.md · reviewer.md · integrator.md
+  commands/              # the six skills
+    fleet.md · grill.md · bootstrap.md · role.md · handoff.md · architecture-review.md</code></pre>
+
+<h3>The project (one repo, many worktrees)</h3>
+<pre class="code"><code>&lt;projects folder&gt;/
+  &lt;main-worktree&gt;/            # main branch — orchestrator + integrator live here
+    FLEET.md                  # generated dashboard + agent roster
+    CHANGELOG.md              # app changelog (integrator folds feature logs in)
+    docs/
+      PRD.md                  # Program PRD — the north star
+      features/README.md      # THE governing isolation convention
+      features/&lt;NAME&gt;.md      # one Feature PRD per standalone feature
+    docs-site/                # built HTML knowledge base (never hand-edit)
+    scripts/build-docs.mjs    # zero-dep KB build
+    scripts/verify-shots.mjs  # zero-dep headless screenshot capturer
+    src/features/&lt;name&gt;/      # merged feature folders
+  &lt;feature-worktree&gt;/         # feat/&lt;name&gt; branch — one builder each
+    src/features/&lt;name&gt;/      # the ONLY place this branch writes
+      logic.ts                #   pure core — no React/DOM/platform/app imports
+      adapters.ts             #   injected platform seam + default web impl
+      &lt;Components&gt;.tsx        #   thin React views
+      &lt;name&gt;.css              #   ALL classes prefixed with a unique namespace
+      __dev__/harness.html    #   standalone preview with mock data
+      __tests__/              #   in-folder tests (registered at integration)
+      CHANGELOG.md · INTEGRATION.md · HANDOFF.md · .status.json
+      VERIFY/                 #   evidence pack — written by the REVIEWER only</code></pre>
+
+<h3>The three-layer split (why every folder looks like that)</h3>
+<ol>
+  <li><b><code>logic.ts</code> — pure, portable core.</b> Plain TypeScript: types, reducers, math, scoring. No React, no DOM, no platform APIs, no app imports. Ports verbatim to any platform.</li>
+  <li><b>View — thin React components.</b> Render state, dispatch actions. A future mobile port re-implements only this layer.</li>
+  <li><b>Adapters — the injected platform seam.</b> A small interface for anything platform-specific (persistence, networking, images), received as a prop, shipping an in-memory default so the harness runs standalone. The integrator supplies the real implementation at merge.</li>
+</ol>
+
+<h3>The Danger Zone <span class="badge b-danger">integrator only</span></h3>
+<p>The shared files that are edit-magnets — an edit here is how parallel work collides. Feature agents <b>never</b> touch them; every needed change is written into <code>INTEGRATION.md</code> instead and applied during the merge pass. Typical list (each project keeps its own in <code>docs/features/README.md</code>): the app shell and router, shared types, the DB layer, shared UI components and styles, the entry point, build config (<code>package.json</code>, <code>vite.config</code>, <code>tsconfig</code>), the shared test runner, everything in <code>docs/</code> except your own feature PRD, and <b>other features' folders</b>.</p>
+
+<h2 id="git">Git &amp; GitHub rules</h2>
+
+<h3>Branch model</h3>
+<ul>
+  <li><b>One repo, many worktrees.</b> <code>main</code> is checked out in the primary folder; each feature gets a sibling worktree via <code>git worktree add ../&lt;dir&gt; -b feat/&lt;name&gt;</code> — parallel branches side by side, no stash-and-switch.</li>
+  <li><b>One branch per feature</b> (<code>feat/&lt;name&gt;</code>), off <code>main</code>, working only inside its feature folder. Because branches only add their own folder, merges stay clean in any order.</li>
+  <li><b>Keep branches short-lived</b> — the less a branch drifts from <code>main</code>, the smaller any conflict.</li>
+</ul>
+
+<h3>Commit rules (builders)</h3>
+<ul>
+  <li><b>Commit at every checkpoint</b> on the feature branch — small, reviewable steps — with conventional messages: <code>type(scope): summary</code> (e.g. <code>feat(storage3d): open box on tile click</code>).</li>
+  <li><b>Stage only your own folder</b> (<code>git add src/features/&lt;name&gt;/</code>) — <b>never <code>git add -A</code></b>. This keeps other features' in-progress files and another session's edits out of your commits.</li>
+  <li><b>Gate every checkpoint:</b> typecheck + tests pass before moving on; a failing gate is fixed before continuing.</li>
+  <li>Docs travel with code: PRD progress notes and the feature's own <code>CHANGELOG.md</code> ride in the same commit as the change that caused them.</li>
+</ul>
+
+<h3>Hard lines <span class="badge b-gate">human-gated</span></h3>
+<ul>
+  <li><b>No agent ever commits on <code>main</code>, merges, tags, or pushes on its own.</b> The owner approves merges (Gate 2); the integrator performs them, one feature at a time — never two integrations at once.</li>
+  <li><b>Pushing is human-gated, like merging.</b> After an approved merge, the integrator <em>offers</em> to push <code>main</code> — it pushes only on your OK, and <b>never force-pushes</b>. Feature branches are pushed only when you ask (to back up work or open a PR).</li>
+  <li>The reviewer commits only its own artifacts (<code>REVIEW.md</code>, <code>VERIFY/</code>, status files) on the feature branch — never app code.</li>
+</ul>
+
+<h3>Remote setup (asked once, at bootstrap)</h3>
+<p>During <kbd class="cmd">/bootstrap</kbd> the orchestrator initializes git, writes a <code>.gitignore</code> (node_modules, build output, secrets/env, local DB files, large data packs), makes the initial commit, and asks <b>one</b> question: <em>"Will this project use an online repo (GitHub/GitLab/…)? If so, what's the URL — and should I create it?"</em> Yes → wire the remote and push <code>main</code>, recording in <code>FLEET.md</code> that a remote exists. No → everything stays local; the worktree pipeline needs no remote. The question is never re-asked per cycle.</p>
+
+<h2 id="house-rules">General house rules — every role inherits these</h2>
+
+<ul>
+  <li><b>Build entirely inside your feature folder.</b> Touch nothing in the Danger Zone; defer every shared edit to <code>INTEGRATION.md</code>, precise enough to apply blind. "If possible" means "isolate everything you can and defer the rest" — never "edit shared files because it was convenient."</li>
+  <li><b>Stay buildable in isolation.</b> Every feature folder must build, run via its own <code>__dev__</code> harness, and pass its in-folder tests against mock data, without the rest of the app wired up. (Vite serves any HTML by URL, so the harness needs no config edits.)</li>
+  <li><b>Test-first at the PRD's seams.</b> The planner pre-agrees the public boundaries where behavior is verified; builders write the failing test at the seam first (red), implement the minimum to pass (green), and <em>note</em> deeper refactors for the reviewer rather than doing them mid-loop. If an issue needs a seam the PRD doesn't name, that's a plan change — flag it, don't invent one.</li>
+  <li><b>Scope discipline.</b> Anything new goes on the Program PRD's features list <em>before</em> it's built. No scope expansion mid-task.</li>
+  <li><b>Namespace all CSS</b> with a unique per-feature prefix so two features can never clash. Reading shared design tokens is fine; adding to shared styles is not.</li>
+  <li><b>Self-continue — don't go idle.</b> Finish a checkpoint → commit + stamp status → immediately start the next one. The only legitimate stop is a genuine decision: set state to <code>blocked</code>/<code>awaiting-approval</code> with the question filled in — never stop silently.</li>
+  <li><b>Status is pull-based.</b> Agents stamp their own <code>.status.json</code> on every transition; <kbd class="cmd">/fleet</kbd> aggregates when you ask. No polling loops, no always-on watcher.</li>
+  <li><b>Evidence over claims.</b> The reviewer quotes real output (test summaries, error text) and <em>looks at every screenshot it captures</em> — a blank PNG is a failed capture, not evidence. You approve merges from the Verification page, not from assertions.</li>
+  <li><b>The KB is baseline, not optional.</b> Every framework project ships the HTML knowledge base; after editing an authored doc, rebuild it. Never hand-edit anything generated.</li>
+  <li><b>Escalation goes through the chain.</b> The reviewer routes fixes back to the builder via the handoff; only scope/plan changes and serious flaws (isolation violated, design-level or security problems) surface to the human via the orchestrator.</li>
+</ul>
+
+<h2 id="launching">Launching agents — kickoff cards</h2>
+
+<p>Each role launches from a short paste-able card (the full set lives in <code>~/.claude/KICKOFF.md</code>; projects with the KB also get a <b>Kickoff page with an interactive generator</b>). Open a session in the right worktree — the auto-role rule already applies the role from the branch — paste the card, and the agent reads its role file + <code>HANDOFF.md</code> + the feature PRD and takes it from there. Since every finishing agent prints the <em>next</em> agent's card, day-to-day operation is:</p>
+
+<blockquote>Paste the card the last agent printed → approve at the two gates → repeat.</blockquote>
+
+<p>Example (builder):</p>
+<pre class="code"><code>You are a Builder Agent assigned to the worktree {{WORKTREE}}. Read
+~/.claude/agents/builder.md and operate under it. Orient: read the Program PRD
+(docs/PRD.md), your feature's PRD in docs/features/, and this worktree's
+HANDOFF.md — the "→ Next: builder" block is your instructions. Confirm the
+feature, then build it inside your src/features/&lt;name&gt;/ folder only, working
+the PRD's issues in blocked-by order, test-first at the PRD's seams. Check each
+issue off as it closes. Update HANDOFF.md when you pause or finish.</code></pre>
+
+<h2 id="install">Installing / porting to another machine</h2>
+
+<p>The framework is a folder of markdown + three zero-dependency Node scripts. To adopt it:</p>
+<ol>
+  <li><b>Prerequisites:</b> Claude Code (app or CLI) · git · Node.js (any recent LTS) · Edge or Chrome (only for screenshot evidence packs on UI projects). No npm packages are installed.</li>
+  <li><b>Copy the kit</b> (this folder) to the new machine, then copy into <code>~/.claude/</code>: <code>agents/</code> (the five roles), <code>commands/</code> (the six skills), <code>AGENTS_FRAMEWORK.md</code>, <code>KICKOFF.md</code>, and add the auto-role block to <code>~/.claude/CLAUDE.md</code>. Nothing in it is secret.</li>
+  <li><b>New project:</b> open Claude Code in an empty folder and run <kbd class="cmd">/bootstrap &lt;your idea&gt;</kbd> — it stands everything up, including the knowledge base, from the kit's <code>kb/</code> starter.</li>
+  <li><b>Existing project:</b> the roles degrade gracefully — the planner simply creates the <code>docs/features/</code> convention on first use.</li>
+</ol>
+
+<p style="color:var(--mut);font-size:13px;margin-top:28px">Deeper reference: <code>AGENTS_FRAMEWORK.md</code> (the single source of truth) · <code>KICKOFF.md</code> (all launch cards) · <code>agents/*.md</code> (full role definitions) · each project's <code>docs/features/README.md</code> (its exact Danger Zone list and folder convention) and its knowledge base's Framework, Status, Kickoff, and Verification pages.</p>
+
+</main>
+<script>
+(function(){
+  var KEY='workflow-theme', root=document.documentElement;
+  var saved=localStorage.getItem(KEY); if(saved) root.setAttribute('data-theme',saved);
+  document.getElementById('theme-toggle').addEventListener('click',function(){
+    var next=root.getAttribute('data-theme')==='light'?'':'light';
+    if(next) root.setAttribute('data-theme',next); else root.removeAttribute('data-theme');
+    localStorage.setItem(KEY,next);
+  });
+})();
+</script>
+</body>
+</html>

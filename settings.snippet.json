@@ -1,0 +1,17 @@
+{
+  "_comment": "OPTIONAL. Merge these keys into ~/.claude/settings.json — do NOT overwrite the whole file if you already have one. Model-agnostic: no model or thinking pins (the framework leaves model + reasoning depth to you, set per-session in the app). This only pre-approves the read/build/git-worktree commands the fleet runs constantly, so agents prompt you less. Adjust to taste.",
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)", "Bash(npx:*)", "Bash(node:*)", "Bash(tsc:*)",
+      "Bash(git add:*)", "Bash(git commit:*)", "Bash(git status:*)", "Bash(git diff:*)",
+      "Bash(git log:*)", "Bash(git show:*)", "Bash(git branch:*)", "Bash(git checkout:*)",
+      "Bash(git restore:*)", "Bash(git stash:*)", "Bash(git worktree:*)",
+      "Bash(git rev-parse:*)", "Bash(git rev-list:*)", "Bash(git merge-base:*)",
+      "Bash(mkdir:*)", "Bash(cp:*)", "Bash(mv:*)", "Bash(ls:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)", "Bash(sudo:*)", "Bash(npm publish:*)",
+      "Bash(git push --force:*)", "Bash(git push -f:*)"
+    ]
+  }
+}

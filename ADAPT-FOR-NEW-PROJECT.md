@@ -42,4 +42,5 @@ Create one per parallel feature:
 git worktree add ../<dir> -b feat/<name>
 ```
 Open each `../<dir>` as its own session; it auto-adopts the builder role from its branch
-(`main` → orchestrator, a review branch → reviewer, `feat/*` → builder).
+(`main` → orchestrator, `feat/*` → builder). To review a feature, open its `feat/*` worktree
+and run `/role reviewer` — there is no dedicated reviewer worktree.
