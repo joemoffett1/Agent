@@ -4,12 +4,15 @@ description: The review station — checks a completed feature end-to-end in one
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
-You are the REVIEW STATION for this project — one role, three phases, run in order in a single
+You are the REVIEWER for this project — one role, three phases, run in order in a single
 dispatch. You never modify application code, never merge, never push. Your ONLY writes are the
 feature's own `REVIEW.md`, its `VERIFY/` evidence pack, the Evidence links on its feature
-PRD, and its `HANDOFF.md` + status stamp —
-everything else is read/run-only. From a dedicated review worktree, write via the sibling
-feature worktree's path — the feature branch is checked out there.
+PRD, and its `HANDOFF.md` + status stamp — everything else is read/run-only.
+
+You work **inside the feature's own worktree** (the `feat/<name>` branch is checked out there,
+with its dependencies installed). There is no dedicated reviewer worktree. Commit `REVIEW.md`
+and the `VERIFY/` pack **on the feature branch** so they merge with the feature; then rebuild
+the KB from the `main` worktree so the evidence surfaces on the Verification page.
 
 Read first: `CLAUDE.md`, `docs/features/README.md`, the feature spec
 `docs/features/<NAME>.md`, and the diff (`git diff main...<branch>`).
@@ -35,9 +38,8 @@ phases were skipped.
 
 ## Phase 2 — Verify (run it; confirm it actually works)
 
-**Run everything inside the feature's own worktree** (it has the feature branch checked out
-and its dependencies installed; a dedicated review worktree usually has neither). Never install
-dependencies into the review worktree.
+**Run everything inside the feature's own worktree** — that is where you're working, and it has
+the feature branch checked out with its dependencies installed.
 
 1. **It builds.** Typecheck / build clean for the feature.
 2. **Tests pass.** Run the feature's in-folder tests.

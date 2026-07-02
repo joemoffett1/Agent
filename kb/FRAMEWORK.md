@@ -30,8 +30,9 @@ generator) are on the [Kickoff cards](kickoff.html) page. See also the
    Builders  ── build inside src/features/<name>/ (parallel, one per worktree)
               │  → Next: reviewer
               ▼
-     Reviewer  ── reviews the diff (reads), verifies (runs tests + harness),
-              │   captures the VERIFY/ evidence pack → the Verification page
+     Reviewer  ── dispatched INTO the feature's own worktree: reviews the diff (reads),
+              │   verifies (tests + harness), captures the VERIFY/ evidence pack —
+              │   all committed on the feature branch → the Verification page
               │  → Next: integrator   (or → Next: builder if changes requested)
               ▼
       Integrator  ── merges to main, applies INTEGRATION.md, wires it in   ▶ GATE 2: you approve the merge
@@ -50,11 +51,12 @@ the next agent needs only a one-line kickoff card to pick up.
 | Orchestrator | `main` worktree | Holds project scope + milestone, briefs planners, maintains the board, recommends moves. Starts nothing on its own. |
 | Planner | the feature worktree | Grills you, then writes the Feature PRD in `docs/features/<NAME>.md` and cuts it into vertical-slice issues. Writes no code. |
 | Builder | a `feat/<name>` worktree | Builds one feature inside its own `src/features/<name>/` folder, issue by issue, test-first at the PRD's seams. Your parallelism. |
-| Reviewer (review station) | the review worktree | One station, three phases: reads the diff (review), runs it (verify), screenshots it (evidence pack → [Verification](verification.html)). Never edits. See [Reviewer](reviewer.html). |
+| Reviewer | the feature's own worktree (dispatched) | Dispatched into the feature being reviewed, three phases: reads the diff (review), runs it (verify), screenshots it (evidence pack → [Verification](verification.html)). Commits REVIEW.md + VERIFY/ on the feature branch so they merge with it. Never edits app code. See [Reviewer](reviewer.html). |
 | Integrator | `main` worktree | Merges a verified feature to `main`. The only role allowed to edit shared / Danger-Zone files. |
 
 **How many of each:** one orchestrator; many builders (one per worktree — this is the
-parallelism); one shared review station; one integrator, serialised (it edits `main`,
+parallelism); the reviewer is a role dispatched into whichever feature worktree needs it (no
+standing worktree); one integrator, serialised (it edits `main`,
 so two at once would collide). Each repo's worktree→agent-name roster lives in its `FLEET.md`.
 
 ## Model & reasoning {#reasoning}
@@ -76,8 +78,10 @@ mechanical runs), keeping credit spend entirely in their hands.
 | `/role <name>` | Adopt a role (`planner`/`builder`/`reviewer`/`integrator`/`orchestrator`) in the current session — overrides the auto-role. |
 
 Opening a session in a worktree auto-adopts the right role from its branch (`main` →
-orchestrator, a review branch → reviewer, `feat/*` → builder), so the commands and cards are
-confirmations more than necessities.
+orchestrator, `feat/*` → builder), so the commands and cards are confirmations more than
+necessities. To **review** a feature, open its `feat/*` worktree and invoke `/role reviewer`
+(or paste a Reviewer kickoff card) — review runs in the feature's own worktree, not a
+dedicated one.
 
 ## Launching agents {#launch}
 

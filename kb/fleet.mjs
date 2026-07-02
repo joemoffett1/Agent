@@ -52,7 +52,7 @@ export function readWorktrees(root) {
     }
     const feature = branch.startsWith('feat/') ? branch.slice(5)
       : role === 'orchestrator' ? 'orchestration + integration'
-      : role === 'reviewer' ? 'review station' : branch
+      : role === 'reviewer' ? 'review / verify' : branch
     let ahead = ''
     if (branch && branch !== 'main' && !branch.startsWith('(')) ahead = sh(`git rev-list --count main..${branch}`, root)
 
@@ -191,14 +191,13 @@ const TEMPLATES = {
   orchestrator: `You are the Orchestrator for this project, running on main ({{WORKTREE}}). Read ~/.claude/agents/orchestrator.md, the Program PRD (docs/PRD.md), and FLEET.md to orient. Run a fleet cycle: refresh FLEET.md and tell me the project state and what needs my decision. Do NOT start, dispatch, or merge anything unless I tell you to — recommend, don't act. Beyond that, act on whatever I direct.`,
   planner: `You are the Planner for feature {{NAME}}. Brief: <one-line goal>. Read ~/.claude/agents/planner.md, the Program PRD (docs/PRD.md), docs/features/README.md, and any existing feature PRD. GRILL ME FIRST — one question at a time with your recommended answer — until the design tree is resolved. Then write/extend docs/features/{{NAME}}.md as a Feature PRD and cut it into vertical-slice issues (what to build / detailed plan / acceptance criteria / tests-first / blocked-by / Evidence: pending review). Quiz me on the slice list — my approval of it is the plan gate; STOP there.`,
   builder: `You are a Builder Agent assigned to the worktree {{WORKTREE}} (branch {{BRANCH}}, feature {{FEATURE}}). Read ~/.claude/agents/builder.md and operate under it. Orient from the Program PRD (docs/PRD.md), your feature PRD in docs/features/, and this worktree's HANDOFF.md (the "→ Next: builder" block). Build inside src/features/{{FEATURE}}/ only, working the PRD's issues in blocked-by order, test-first at the PRD's seams. Check each issue off as it closes. Update HANDOFF.md (status + "→ Next" block) when you pause or finish.`,
-  reviewer: `You are the Reviewer (review station) assigned to {{BRANCH}} (feature {{FEATURE}}), run from the review worktree. Read ~/.claude/agents/reviewer.md. Orient from that branch's HANDOFF.md "→ Next: reviewer" block, the spec, and git diff main..{{BRANCH}}. Phase 1 review the diff (read-only); phase 2 verify (tests + harness, in the feature's own worktree); phase 3 capture the screenshot evidence pack into src/features/{{FEATURE}}/VERIFY/ (scripts/verify-shots.mjs) and rebuild the docs so the owner can approve from the KB's Verification page. Write findings to src/features/{{FEATURE}}/REVIEW.md and set the HANDOFF.md status + "→ Next" block.`,
+  reviewer: `You are the Reviewer for feature {{FEATURE}}, working in its own worktree {{WORKTREE}} (branch {{BRANCH}}). Read ~/.claude/agents/reviewer.md. Orient from this worktree's HANDOFF.md "→ Next: reviewer" block, the spec, and git diff main..{{BRANCH}}. Phase 1 review the diff (read-only); phase 2 verify (tests + harness, right here in this worktree); phase 3 capture the screenshot evidence pack into src/features/{{FEATURE}}/VERIFY/ (scripts/verify-shots.mjs). Commit REVIEW.md + the VERIFY/ pack on this feature branch so they merge with the feature, then rebuild the docs from the main worktree so the owner can approve from the KB's Verification page. Set the HANDOFF.md status + "→ Next" block.`,
   integrator: `You are the Integrator assigned to {{BRANCH}} (feature {{FEATURE}}), on main ({{WORKTREE}}). Read ~/.claude/agents/integrator.md. Confirm reviewed + verified (REVIEW.md / HANDOFF.md), then merge to main, apply INTEGRATION.md, wire it in, fold the changelog, mark it done in the Program PRD, and verify the whole app. Stop and confirm before the final merge. Set status merged and run /fleet.`,
 }
 
 export function buildKickoff(root, buildTime) {
   const wts = readWorktrees(root)
   const station = {
-    reviewer: (wts.find((w) => w.role === 'reviewer') || {}).dir || '(review worktree)',
     main: (wts.find((w) => w.role === 'orchestrator') || {}).dir || '(main worktree)',
   }
   const data = JSON.stringify({ wts, station, templates: TEMPLATES })
@@ -213,7 +212,7 @@ export function buildKickoff(root, buildTime) {
     <label>Role
       <select id="kg-role">
         <option value="builder">Builder</option>
-        <option value="reviewer">Reviewer (review station)</option>
+        <option value="reviewer">Reviewer (in the feature's worktree)</option>
         <option value="integrator">Integrator</option>
         <option value="orchestrator">Orchestrator</option>
         <option value="planner">Planner</option>
@@ -256,7 +255,7 @@ export function buildKickoff(root, buildTime) {
     if(role==='planner'){ m.NAME=(nameEl.value||'<NAME>'); }
     else if(role==='orchestrator'){ m.WORKTREE=wt.dir||DATA.station.main; m.BRANCH='main'; }
     else if(role==='builder'){ m.WORKTREE=wt.dir||''; m.BRANCH=wt.branch||''; m.FEATURE=wt.feature||''; }
-    else if(role==='reviewer'){ m.WORKTREE=DATA.station.reviewer; m.BRANCH=wt.branch||''; m.FEATURE=wt.feature||''; }
+    else if(role==='reviewer'){ m.WORKTREE=wt.dir||''; m.BRANCH=wt.branch||''; m.FEATURE=wt.feature||''; }
     else if(role==='integrator'){ m.WORKTREE=DATA.station.main; m.BRANCH=wt.branch||''; m.FEATURE=wt.feature||''; }
     cardEl.textContent=fill(tpl,m);
   }
