@@ -14,7 +14,7 @@ command loads it into a long-lived session).
 | **orchestrator** | owns the Program PRD + FLEET; delegates | Project lead / console. Holds whole-project scope, briefs+aligns planners, maintains the dashboard, sequences & dispatches work, tees up decisions for the human, bootstraps new projects. Runs on `main`. Starts nothing on its own. |
 | **planner** | writes the PRD, never code | Grills the human, then writes the Feature PRD in `docs/features/<NAME>.md` and cuts it into vertical-slice issues (detailed plans, seams, blocked-by). |
 | **builder** | writes code in its own folder | Implements one feature inside `src/features/<name>/`, issue by issue, test-first at the PRD's seams; may refine the plan; logs progress. |
-| **reviewer** | reads + runs; edits no code | The review station, one dispatch, three phases: reviews the diff (scope discipline, layer integrity, plan fidelity, correctness), verifies it works (build, tests, dev harness), and captures the screenshot **evidence pack** into `src/features/<name>/VERIFY/` for the KB's Verification page. |
+| **reviewer** | reads + runs; edits no code | Dispatched into the feature's own worktree, one dispatch, three phases: reviews the diff (scope discipline, layer integrity, plan fidelity, correctness), verifies it works (build, tests, dev harness), and captures the screenshot **evidence pack** into `src/features/<name>/VERIFY/` for the KB's Verification page — all committed on the feature branch so they merge with it. |
 | **integrator** | edits shared files | Merges a reviewed+verified feature into `main`: applies the deferred `INTEGRATION.md` edits, wires it in, folds the changelog, verifies the whole app. The ONLY role allowed in the Danger Zone. |
 
 **Review vs. verify are phases, not roles.** The review phase answers *"is this code right?"*
@@ -53,18 +53,20 @@ branch, so several agents work in parallel without collisions. Roles are assigne
 by branch (see `~/.claude/CLAUDE.md`):
 
 - `main` -> orchestrator (the console)
-- a dedicated review branch (e.g. `agents`) or a `*review*` worktree -> reviewer
 - `feat/<name>` -> builder, working `src/features/<name>/`
 
-Each repo keeps its own worktree→agent-name roster in its `FLEET.md`. To add a builder:
-`git worktree add ../<dir> -b feat/<name>`.
+There is no dedicated review branch/worktree — to **review** a feature, open its `feat/*`
+worktree and run `/role reviewer` (the reviewer commits `REVIEW.md` + `VERIFY/` on the feature
+branch so they merge with it). Each repo keeps its own worktree→agent-name roster in its
+`FLEET.md`. To add a builder: `git worktree add ../<dir> -b feat/<name>`.
 
 ## Fleet dashboard & how many of each role
 
 - **Orchestrator: exactly one**, on `main` — the only project-wide role. **Builders: many** — one
-  per worktree, your parallelism. **Reviewer: one, shared, on-demand** (the review station —
-  review + verify + evidence pack in one dispatch; bursty work, no standing per-worktree
-  instance). **Integrator: exactly one, serialized** — it edits `main` + shared files, so two at
+  per worktree, your parallelism. **Reviewer: on-demand, dispatched into the feature's own
+  worktree** (review + verify + evidence pack in one dispatch, committed on the feature branch;
+  bursty work, no dedicated reviewer worktree). **Integrator: exactly one, serialized** — it
+  edits `main` + shared files, so two at
   once would collide; the orchestrator dispatches it one feature at a time.
 - **`FLEET.md`** (repo root) is the single dashboard: worktree | feature | agent name | status.
   It's a **generated snapshot** — regenerate with `/fleet`, never hand-edit the table.
@@ -156,7 +158,7 @@ state lives in **files**, not agent memory:
   `kb/` starter: `build:docs` renders `docs/*.md` → `docs-site/`, plus the generated Status,
   Kickoff, and Verification pages). After editing any authored doc, run `npm run build:docs` —
   never leave the HTML stale. The owner approves merges from the Verification page's screenshot
-  evidence packs (`src/features/<name>/VERIFY/`, captured by the review station with
+  evidence packs (`src/features/<name>/VERIFY/`, captured by the reviewer with
   `scripts/verify-shots.mjs`) instead of hand-testing.
 
 ## Model & reasoning — set by you, in-app

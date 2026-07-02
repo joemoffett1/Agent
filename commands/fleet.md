@@ -13,7 +13,7 @@ cycle** for this project. Per that role:
    effort / out-of-scope work.
 3. **Sequence & recommend** — what's awaiting my gate (plans/merges to approve), what's ready to
    advance (completed→review, verified→integrate), what a free builder should start next, and
-   any blockers. One integrator at a time; the review station is shared.
+   any blockers. One integrator at a time; the reviewer is dispatched into the feature's own worktree on-demand.
 4. **Report** the refreshed table + a short "state of the project," and recommend next moves.
    **Recommend only — do not start, dispatch, or merge anything unless I tell you to.** Do not
    edit feature code or Danger-Zone files.

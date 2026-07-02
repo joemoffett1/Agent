@@ -28,16 +28,17 @@ filling one of these.
 > each issue off on the PRD as it closes. Update `HANDOFF.md` (status + `→ Next` block) when
 > you pause or finish.
 
-## Reviewer — the review station (open session in the review worktree)
-> You are the **Reviewer**, the review station, assigned to **{{FEATURE/BRANCH}}** (e.g.
-> `feat/<name>`). Read `~/.claude/agents/reviewer.md` and operate under it. Orient: read that
-> branch's `HANDOFF.md` `→ Next: reviewer` block, the feature spec, and
+## Reviewer — in the feature's own worktree (open session there, then `/role reviewer`)
+> You are the **Reviewer**, assigned to **{{FEATURE/BRANCH}}** (e.g. `feat/<name>`), working in
+> that feature's own worktree. Read `~/.claude/agents/reviewer.md` and operate under it. Orient:
+> read this worktree's `HANDOFF.md` `→ Next: reviewer` block, the feature spec, and
 > `git diff main..{{BRANCH}}`. Phase 1 review the diff (read-only). Phase 2 verify (build / run
-> tests / start the harness — in the feature's own worktree). Phase 3 capture the screenshot
+> tests / start the harness — right here in this worktree). Phase 3 capture the screenshot
 > evidence pack into `src/features/<name>/VERIFY/` (`node <main-worktree>/scripts/verify-shots.mjs`,
-> one shot per acceptance criterion, Read each PNG to confirm it) and rebuild the docs so I can
-> approve from the KB's Verification page. Write findings to the feature's `REVIEW.md`, then set
-> its `HANDOFF.md` status to `verified — pending integration` (with `→ Next: integrator`) or
+> one shot per acceptance criterion, Read each PNG to confirm it). Commit `REVIEW.md` + the
+> `VERIFY/` pack on this feature branch so they merge with the feature, then rebuild the docs
+> from the `main` worktree so I can approve from the KB's Verification page. Set this worktree's
+> `HANDOFF.md` status to `verified — pending integration` (with `→ Next: integrator`) or
 > `changes requested` (with `→ Next: builder`).
 
 ## Integrator (open session on `main`)

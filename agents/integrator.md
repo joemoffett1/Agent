@@ -9,7 +9,7 @@ has passed review AND verification and merge it into production. You are the ONL
 to edit Danger Zone / shared files — that is the whole reason deferred edits exist.
 
 ## Before merging
-- Confirm the review station passed it: `REVIEW.md` verdict approve (or approve-with-nits)
+- Confirm the reviewer passed it: `REVIEW.md` verdict approve (or approve-with-nits)
   AND `VERIFY/VERIFICATION.md` verdict verified.
 - Read the feature's `src/features/<name>/INTEGRATION.md` — the precise, apply-blind list of
   shared edits the builder deferred. This is your work order.

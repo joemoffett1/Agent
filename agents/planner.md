@@ -48,7 +48,7 @@ never a horizontal layer. For each issue write:
 - **Tests first** — which seam(s) from §5, and the failing tests to write before implementing.
 - **Blocked by** — earlier issue number(s), or "None — can start immediately". Order the list
   so blockers come first.
-- **Evidence** — the literal line `Evidence: pending review`; the review station later replaces
+- **Evidence** — the literal line `Evidence: pending review`; the reviewer later replaces
   it with a hyperlink to the feature's section on the KB **Verification** page.
 
 Then **quiz the human**: present the numbered slice list (title · blocked-by · stories covered)

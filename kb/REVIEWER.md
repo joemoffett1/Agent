@@ -1,16 +1,17 @@
 <!--meta
-what: Operating manual for the single shared review station — one role, three phases. It is launched on-demand to check ONE feature that a builder has handed over: it reads the diff (review), runs the feature (verify), captures the screenshot evidence pack (VERIFY/), writes findings, and hands the feature forward or back. It does not poll, supervise, or autonomously drive builders.
-who: Whoever launches the review station, and anyone wanting to understand how a built feature is checked before integration.
-matters: One shared station handles every feature, on-demand — review/verify is bursty, not a standing loop. | Three phases in order — review READS (scope, layer purity, plan fidelity, correctness); verify RUNS (build, tests, harness); the evidence pack SHOWS (one screenshot per acceptance criterion into VERIFY/, surfaced on the Verification page). It never edits code. | The owner approves merges from the Verification page's evidence, not by hand-testing. | Escalates to the human only for a scope/plan change or a serious flaw — everything else routes back to the builder.
+what: Operating manual for the reviewer — one role, three phases, dispatched on-demand INTO a feature's own worktree to check ONE feature a builder has handed over: it reads the diff (review), runs the feature (verify), captures the screenshot evidence pack (VERIFY/), writes findings, and hands the feature forward or back. It does not poll, supervise, or autonomously drive builders.
+who: Whoever dispatches a reviewer into a feature worktree, and anyone wanting to understand how a built feature is checked before integration.
+matters: The reviewer is dispatched per feature, on-demand — review/verify is bursty, not a standing loop, and there is no dedicated reviewer worktree. | Its findings and evidence are committed on the feature branch, so they merge with the feature. | Three phases in order — review READS (scope, layer purity, plan fidelity, correctness); verify RUNS (build, tests, harness); the evidence pack SHOWS (one screenshot per acceptance criterion into VERIFY/, surfaced on the Verification page). It never edits code. | The owner approves merges from the Verification page's evidence, not by hand-testing. | Escalates to the human only for a scope/plan change or a serious flaw — everything else routes back to the builder.
 status: active
-lastUpdated: 2026-01-01
+lastUpdated: 2026-07-02
 -->
 
-# Review station
+# Reviewer
 
-One shared station (in the review worktree) checks features **on demand** — it is launched
-against a single feature when that feature's builder reports `completed — pending review`, not
-on a timer. It is one role with three phases, run in order: **review** (reads the diff),
+The reviewer is dispatched **into a feature's own worktree** to check it **on demand** —
+launched against a single feature when that feature's builder reports `completed — pending
+review`, not on a timer. There is no dedicated reviewer worktree: the review runs where the
+feature lives, so its findings and evidence ride the feature branch and merge with it. It is one role with three phases, run in order: **review** (reads the diff),
 **verify** (runs it), **evidence pack** (screenshots it). See the [framework](framework.html)
 for where it sits in the flow, and the [feature workflow](features.html) for the isolation
 rules it checks.
@@ -101,7 +102,10 @@ Doc-answerable questions (the answer is in a spec) you resolve yourself in the f
 
 ## Launching it {#launch}
 
-Run it on-demand in the review worktree using the **Reviewer** card on the
-[Kickoff cards](kickoff.html) page (target the feature's branch). It is **not** a standing loop
-— no polling, no `/loop`. The orchestrator (or you) launches it when a feature is handed over,
-and it exits after writing `REVIEW.md` + the evidence pack + the handoff.
+Open the feature's own `feat/*` worktree and run `/role reviewer`, or use the **Reviewer** card
+on the [Kickoff cards](kickoff.html) page (target the feature's branch). All three phases run
+right there in the feature worktree, and `REVIEW.md` + the `VERIFY/` pack are committed on the
+feature branch so they merge with it. It is **not** a standing loop — no polling, no `/loop`.
+The orchestrator (or you) launches it when a feature is handed over, and it exits after writing
+`REVIEW.md` + the evidence pack + the handoff. Rebuild the KB from the `main` worktree so the
+evidence shows on the Verification page.

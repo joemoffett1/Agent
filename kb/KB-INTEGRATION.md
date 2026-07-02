@@ -19,7 +19,7 @@ new repo; this folder is the self-contained, zero-dependency starter it copies f
 - `verification.mjs` — the Verification page: aggregates every worktree's
   `src/features/<name>/VERIFY/` evidence pack (merged or not), copies the screenshots into the
   site, one section per feature with its verdict.
-- `verify-shots.mjs` — the zero-dep screenshot capturer the review station uses (drives the
+- `verify-shots.mjs` — the zero-dep screenshot capturer the reviewer uses (drives the
   installed Edge/Chrome headless from a shot-list JSON; unique scratch profile per capture).
 - `FRAMEWORK.md`, `REVIEWER.md` — the authored Agents doc pages.
 
@@ -46,7 +46,7 @@ ids }`), make sure your markdown renderer handles `![caption](src)` images, and 
 
 ## The evidence-pack convention the pages rely on
 
-The review station writes, per verified feature:
+The reviewer writes, per verified feature:
 
 ```
 src/features/<name>/VERIFY/

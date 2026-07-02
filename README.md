@@ -1,9 +1,10 @@
 # Claude agent framework — portable kit
 
-A planner → builder → review-station → integrator agent framework for Claude Code, built around
-git worktrees: several builder agents work in parallel with zero merge collisions, one shared
-review station checks each feature (reads the diff, runs it, and captures a **screenshot
-evidence pack**), and a single serialized integrator merges to `main`. You approve exactly two
+A planner → builder → reviewer → integrator agent framework for Claude Code, built around
+git worktrees: several builder agents work in parallel with zero merge collisions, a reviewer is
+dispatched into each feature's own worktree to check it (reads the diff, runs it, and captures a
+**screenshot evidence pack** committed on the feature branch), and a single serialized integrator
+merges to `main`. You approve exactly two
 things per feature: the plan (a Feature PRD cut into vertical-slice issues, written after the
 planner relentlessly interviews you), and the merge — the latter from the project knowledge
 base's **Verification page**, so you approve from evidence instead of hand-testing. Builders
@@ -25,7 +26,7 @@ them.) And **you never need a terminal**: agents run any commands themselves; yo
 - **Node.js** (any recent LTS) — runs the zero-dependency knowledge-base build and the
   screenshot capturer. The framework installs no npm packages of its own.
 - **Microsoft Edge or Google Chrome** — driven headlessly by `verify-shots.mjs` to capture the
-  review station's screenshot evidence packs. Only needed for projects with a UI to screenshot.
+  reviewer's screenshot evidence packs. Only needed for projects with a UI to screenshot.
 
 ## Install — no terminal needed
 

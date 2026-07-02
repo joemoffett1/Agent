@@ -3,7 +3,7 @@
  * screenshot evidence pack into one KB page, so the owner can approve a feature
  * from evidence instead of hand-testing it.
  *
- * Convention (the review station writes the pack — see ~/.claude/agents/reviewer.md):
+ * Convention (the reviewer writes the pack — see ~/.claude/agents/reviewer.md):
  *   src/features/<name>/VERIFY/VERIFICATION.md   the evidence report (meta: feature,
  *                                                branch, date, verdict)
  *   src/features/<name>/VERIFY/*.png             the screenshots it embeds, referenced
@@ -107,8 +107,8 @@ export function buildVerification(root, buildTime, outDir) {
     }))
   }
 
-  const bodyHtml = `<p class="v-note">Generated from every worktree's <code>src/features/*/VERIFY/</code> evidence pack at build time (${esc(buildTime)}) — a feature branch does not need to be merged for its evidence to appear. The review station captures one screenshot per acceptance criterion when it verifies a feature; approve or reject the merge from this page instead of hand-testing. Refresh with <code>npm run build:docs</code>. The station's manual is on the <a href="reviewer.html">Reviewer</a> page.</p>
-${sections.length ? sections.join('\n') : `<p>No evidence packs yet. When the review station verifies a feature it writes <code>src/features/&lt;name&gt;/VERIFY/VERIFICATION.md</code> plus one screenshot per acceptance criterion (captured via <code>scripts/verify-shots.mjs</code>); rebuild the docs and each pack appears here as a section.</p>`}`
+  const bodyHtml = `<p class="v-note">Generated from every worktree's <code>src/features/*/VERIFY/</code> evidence pack at build time (${esc(buildTime)}) — a feature branch does not need to be merged for its evidence to appear. The reviewer captures one screenshot per acceptance criterion when it verifies a feature; approve or reject the merge from this page instead of hand-testing. Refresh with <code>npm run build:docs</code>. The reviewer's manual is on the <a href="reviewer.html">Reviewer</a> page.</p>
+${sections.length ? sections.join('\n') : `<p>No evidence packs yet. When the reviewer verifies a feature it writes <code>src/features/&lt;name&gt;/VERIFY/VERIFICATION.md</code> plus one screenshot per acceptance criterion (captured via <code>scripts/verify-shots.mjs</code>); rebuild the docs and each pack appears here as a section.</p>`}`
 
   return {
     source: 'src/features/*/VERIFY/ evidence packs across all git worktrees, at build time',

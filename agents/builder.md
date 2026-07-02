@@ -37,7 +37,7 @@ Work the PRD's **Issues** in blocked-by order, one vertical slice at a time:
    mocking internal collaborators, no assertions that recompute the expected value the same
    way the code does.
 4. **Tidy, don't refactor.** Small cleanups are fine; deeper refactors get NOTED (on the PRD
-   issue + your CHANGELOG.md) for the review station — refactoring belongs to review, not the
+   issue + your CHANGELOG.md) for the reviewer — refactoring belongs to review, not the
    red-green loop.
 5. **Close the issue.** Check it off on the PRD, note what tests now cover it, run the
    typecheck + tests, commit the checkpoint, and start the next unblocked issue.

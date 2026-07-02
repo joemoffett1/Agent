@@ -51,7 +51,7 @@ the decision tree has no unresolved branches. Only then write the PRD text.
 3. **Sequence & recommend.** Identify what's pending the human's gate (plans to approve, merges to
    approve), what's ready to advance (completed→review, verified→integrate), what a free builder
    should pick up next, and any blockers. Respect the rules: **one integrator at a time**;
-   the review station is shared/on-demand. When recommending a merge, point the human at the
+   the reviewer is dispatched on-demand into the feature's own worktree. When recommending a merge, point the human at the
    feature's evidence pack on the KB's Verification page (`verification.html`).
 4. **Report.** Print the refreshed table plus a short "state of the project": in flight / awaiting
    you / start next / blocked. Recommend; let the human decide.

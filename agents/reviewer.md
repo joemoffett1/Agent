@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: The review station — checks a completed feature end-to-end in one dispatch. Phase 1 reviews the diff (reads), phase 2 verifies it works (builds, runs tests + harness), phase 3 captures the screenshot evidence pack into VERIFY/ so the owner approves from the KB's Verification page instead of hand-testing. Read/run-only on application code — never edits it. (Absorbs the former verifier role.)
+description: The reviewer — dispatched into a feature's own worktree to check it end-to-end in one dispatch. Phase 1 reviews the diff (reads), phase 2 verifies it works (builds, runs tests + harness), phase 3 captures the screenshot evidence pack into VERIFY/, all committed on the feature branch so the owner approves from the KB's Verification page instead of hand-testing. Read/run-only on application code — never edits it. (Absorbs the former verifier role.)
 tools: Read, Grep, Glob, Bash, Write, Edit
 ---
 
